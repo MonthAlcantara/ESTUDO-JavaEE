@@ -12,12 +12,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import br.com.monthalcantara.model.Cliente;
+import br.com.monthalcantara.service.ClienteService;
 
 @WebServlet(urlPatterns = "/cliente")
 public class ClienteServlet extends HttpServlet {
 
-	List<Cliente> lista = new ArrayList<Cliente>();
 	Cliente cli;
+	ClienteService clienteservice = new ClienteService();
 
 	public ClienteServlet() {// TomCat cria uma instância do Servlet
 		System.out.println("Construindo Servlet...");
@@ -25,6 +26,7 @@ public class ClienteServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {// TomCat inicia a instância que ele criou
+
 		System.out.println("Iniciando o Servlet...");
 		super.init();
 	}
@@ -37,9 +39,15 @@ public class ClienteServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String i = req.getParameter("i");
+		if (i != null && i != "") {
+			clienteservice.excluir(Integer.parseInt(i));
+		}
+
 		RequestDispatcher dispatcher = req.getRequestDispatcher("cliente.jsp");
-		req.setAttribute("lista", lista);
+		req.setAttribute("lista", clienteservice.getLista());
 		dispatcher.forward(req, resp);
+
 	}
 
 	@Override
@@ -54,11 +62,18 @@ public class ClienteServlet extends HttpServlet {
 		// setando email no cliente
 		cli.setEmail(email);
 
-		// Criando uma lista de Clientes
+		// Adcionando à lista de Clientes
 
-		lista.add(cli);
+		clienteservice.cadastrar(cli);
 
-		resp.getWriter().print("Chamou pelo método POST adicionando o cliente: " + email);
+		RequestDispatcher dispatcher = req.getRequestDispatcher("cliente.jsp");
+		req.setAttribute("msg", "Cadastrado com Sucesso");
+		req.setAttribute("lista", clienteservice.getLista());
+		dispatcher.forward(req, resp);
+
+		// resp.getWriter().print("Chamou pelo método POST adicionando o cliente: " +
+		// email);
+		// resp.sendRedirect("cliente");
 	}
 
 	@Override
@@ -75,7 +90,7 @@ public class ClienteServlet extends HttpServlet {
 	}
 
 	@Override
-	public void destroy() {
+	public void destroy() {// Encerra o ciclo de vida do Servlet
 		System.out.println("Servlet será destruído");
 		super.destroy();
 	}
